@@ -1,7 +1,87 @@
+[build-system]
+requires = ["hatchling>=1.25"]
+build-backend = "hatchling.build"
+
 [project]
 name = "qednet"
 version = "0.1.0"
-description = "Add your description here"
+description = "Data collection & preprocessing pipeline for QEDNet (formal proofs, retrieval, indexes)."
 readme = "README.md"
-requires-python = ">=3.13"
-dependencies = []
+requires-python = ">=3.10,<3.13"
+license = { text = "MIT" }
+authors = [{ name = "Michael Vaden" }]
+
+# Core deps stay CPU-safe by default. (GPU wheels can be added per-cluster later.)
+dependencies = [
+  "leandojo>=0.2.0",              # Lean proof trace extraction
+  "datasets>=2.19.0",             # dataset IO
+  "orjson>=3.10.7",               # fast JSON
+  "ujson>=5.10.0",                # alt fast JSON
+  "pydantic>=2.7.0",
+  "typer>=0.12.3",                # CLI helpers
+  "rich>=13.7.1",                 # pretty logs
+  "tqdm>=4.66.4",
+  "sentence-transformers>=3.0.1", # lemma embeddings
+  "faiss-cpu>=1.7.4",             # retrieval index (CPU default)
+  "numpy>=1.26.4",
+  "scipy>=1.12.0",
+  "rank-bm25>=0.2.2",             # BM25 negatives
+  "pyyaml>=6.0.1",
+  "networkx>=3.3",                # graph utilities
+  "torch>=2.3.0",                 # default CPU build; replace with CUDA wheel if needed
+]
+
+[project.optional-dependencies]
+dev = [
+  "ruff>=0.5.4",
+  "black>=24.4.2",
+  "mypy>=1.10.0",
+  "pytest>=8.2.0",
+  "pytest-xdist>=3.6.1",
+  "ipykernel>=6.29.5",
+]
+coq = [
+  # Coq/SerAPI is installed via opam; this group is just Python-side tooling.
+  "sexpdata>=1.0.0",
+]
+gnn = [
+  # Install PyTorch Geometric separately to match your Torch/CUDA.
+  "torch-sparse; python_version >= '3.10'",  # placeholders to make uv resolve extras later
+  "torch-scatter; python_version >= '3.10'",
+  "torch-geometric>=2.5.3",
+]
+gpu = [
+  # Use with CUDA-equipped nodes; you will typically install specific CUDA wheels via:
+  # uv pip install --extra-index-url https://download.pytorch.org/whl/cu121 torch torchvision torchaudio faiss-gpu
+  "torch",
+  "torchvision",
+  "torchaudio",
+  "faiss-gpu",
+]
+
+[project.scripts]
+qednet-coq-extract = "qednet_data.scripts.coq_extract:app"
+qednet-normalize = "qednet_data.scripts.normalize:app"
+qednet-build-retrieval = "qednet_data.scripts.build_retrieval_pairs:app"
+qednet-build-faiss = "qednet_data.scripts.build_faiss:app"
+
+[tool.hatch.build.targets.wheel]
+packages = ["qednet_data"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py310"
+select = ["E", "F", "I", "UP", "B", "C4", "RUF"]
+ignore = ["E501"]                                # handled by black
+
+[tool.black]
+line-length = 100
+target-version = ["py310"]
+
+[tool.mypy]
+python_version = "3.10"
+strict = true
+warn_unused_ignores = true
+warn_redundant_casts = true
+disallow_untyped_defs = true
+no_implicit_optional = true
