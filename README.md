@@ -64,4 +64,4 @@ QEDNet training follows a **staged curriculum**:
   - Curriculum learning and self-play that auto-generates new theorems and hard negatives.  
 
 5. **Neural Verifier / Critic**  
-  - Reranks candidate proof steps before formal checking to **save search effort**.  
+  - Reranks candidate proof steps before formal checking to **save search effort**.
