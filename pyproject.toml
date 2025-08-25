@@ -13,7 +13,7 @@ authors = [{ name = "Michael Vaden" }]
 
 # Core deps stay CPU-safe by default. (GPU wheels can be added per-cluster later.)
 dependencies = [
-  "leandojo>=0.2.0",              # Lean proof trace extraction
+  "lean-dojo>=0.2.0",             # Lean proof trace extraction
   "datasets>=2.19.0",             # dataset IO
   "orjson>=3.10.7",               # fast JSON
   "ujson>=5.10.0",                # alt fast JSON
