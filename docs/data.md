@@ -14,3 +14,5 @@ lake update
 lake clean
 lake build
 
+# Statement Parsing
+# Proof Trace Parsing
