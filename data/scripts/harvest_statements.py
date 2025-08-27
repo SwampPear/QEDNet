@@ -1,83 +1,103 @@
-
-#import os, re, json, sys, pathlib, hashlib
-import re, json
+#!/usr/bin/env python3
+import subprocess, json
 from pathlib import Path
 
-ROOT = Path(__file__).resolve().parents[1]
-MATHLIB = Path(ROOT, 'data', 'raw', 'mathlib4', 'Mathlib')
-OUT = Path(ROOT, 'data', 'processed', 'statements.json')
+ROOT = Path.home() / 'qednet'
+PROJ = ROOT / 'qeddump'          # tiny Lake project
+OUT  = ROOT / 'data' / 'statements.json'
+PROJ.mkdir(parents=True, exist_ok=True)
+( ROOT / 'data').mkdir(parents=True, exist_ok=True)
 
-decl_pat = re.compile(
-    r'^(theorem|lemma)\s+([A-Za-z0-9_\'\.]+)\s*:(.*?)(?:(?==\s*by)|(?::=)|(?:\n\s*:=)|(?:\n\s*where)|$)',
-    re.DOTALL | re.MULTILINE
-)
-import_pat = re.compile(r'^\s*import\s+([A-Za-z0-9\.\s]+)', re.MULTILINE)
+lakefile = r'''
+import Lake
+open Lake DSL
 
+package qeddump
 
-def clean_stmt(s: str) -> str:
-    # collapse whitespace, keep unicode symbols
-    return re.sub(r'\s+', ' ', s).strip()
+-- Pull mathlib4 as a dependency (you can pin a commit instead of "master")
+require mathlib from git
+  "https://github.com/leanprover-community/mathlib4" @ "master"
 
+@[default_target]
+lean_exe qeddump where
+  root := `DumpStatements
+'''
+dump_lean = r'''
+import Lean
+import Mathlib
 
-def module_from_path(p: Path) -> str:
-    # Mathlib/Algebra/Group.lean -> Mathlib.Algebra.Group
-    parts = list(p.relative_to(MATHLIB).with_suffix('').parts)
-    return 'Mathlib.' + '.'.join(parts)
+open Lean Meta
 
+namespace QEDDump
 
-def harvest_file(fp: Path):
-    text = fp.read_text(encoding='utf-8', errors='ignore')
-    # optional quick skip: files that are entirely tactics/automation are fine to include or skip.
-    imports = []
-    m = import_pat.findall(text)
-    if m:
-        # split "A.B C.D" tokens
-        for line in m:
-            imports.extend([tok for tok in line.split() if tok])
+def splitModName (n : Name) : (String × String) :=
+  let s := n.toString
+  match s.rev.findIdx? (· == '.') with
+  | some i =>
+      let j := s.length - i - 1
+      (s.extract 0 j, s.extract (j+1) s.length)
+  | none => ("", s)
 
-    items = []
-    for m in decl_pat.finditer(text):
-        kind, name, stmt = m.group(1), m.group(2), m.group(3)
-        stmt = clean_stmt(stmt)
-        # very light "sorry" guard in the declaration head span
-        head_span = text[m.start(): text.find('\n\n', m.start()) if text.find('\n\n', m.start())!=-1 else m.end()]
-        if re.search(r'\bsorry\b', head_span):
-            continue
-        mod = module_from_path(fp)
-        sysname = 'lean'
-        kind_short = 'thm' if kind == 'theorem' else 'lem'
-        _id = f'{sysname}:{mod}.{name}'
-        items.append({
-            'id': _id,
-            'sys': sysname,
-            'mod': mod,
-            'name': name,
-            'kind': kind_short,
-            'stmt': stmt
-        })
-    return items
+def isMathlibConst (n : Name) : Bool :=
+  n.toString.startsWith "Mathlib."
 
+def jStr (s : String) : Json := Json.str s
+def stmtEntry (sys mod name kind stmt : String) : Json :=
+  Json.obj
+    [ ("id",   jStr s!"{sys}:{mod}.{name}")
+    , ("sys",  jStr sys)
+    , ("mod",  jStr mod)
+    , ("name", jStr name)
+    , ("kind", jStr kind)
+    , ("stmt", jStr stmt)
+    ]
 
-def main():
-    all_items = []
+def collectStatements : MetaM (Array Json) := do
+  let env ← getEnv
+  let consts := env.constants.map₁.toList
+  let mut out : Array Json := #[]
+  for (n, ci) in consts do
+    if isMathlibConst n then
+      match ci with
+      | .thmInfo ti =>
+          let (mod, name) := splitModName n
+          let fmt ← ppExpr ti.type
+          let stmt := fmt.pretty
+          out := out.push (stmtEntry "lean" mod name "thm" stmt)
+      | _ => pure ()
+  return out
 
-    for fp in MATHLIB.rglob('*.lean'):
-        # skip archived or generated if desired
-        if '/.lake/' in str(fp): 
-            continue
-        rel = fp.relative_to(MATHLIB)
-        if any(part.startswith('_archive') for part in rel.parts):
-            continue
-        items = harvest_file(fp)
-        all_items.extend(items)
+def main : IO Unit := do
+  let ppOpts := ({} : Options)
+    |>.setBool `pp.unicode true
+    |>.setNat  `pp.width  120
+  let env ← importModules #[{module := `Mathlib}] {} 0
+  let (_, arr) ← (collectStatements).toIO ppOpts { env := env }
+  let json := Json.obj [("ver", Json.num 1), ("statements", Json.arr arr.toList)]
+  IO.println json.compress
 
-    # deterministic order
-    all_items.sort(key=lambda d: d['id'])
-    data = {'ver': 1, 'statements': all_items}
-    OUT.parent.mkdir(parents=True, exist_ok=True)
-    OUT.write_text(json.dumps(data, ensure_ascii=False, indent=2), encoding='utf-8')
-    print(f'wrote {len(all_items)} statements -> {OUT}')
+end QEDDump
 
+open QEDDump in
+#eval main
+'''
+(PROJ / 'lakefile.lean').write_text(lakefile, encoding='utf-8')
+(PROJ / 'DumpStatements.lean').write_text(dump_lean, encoding='utf-8')
 
-if __name__ == '__main__':
-    main()
+def run(cmd, cwd=None):
+  r = subprocess.run(cmd, cwd=cwd, text=True, capture_output=True)
+  if r.returncode != 0:
+    raise SystemExit(f"cmd failed: {' '.join(cmd)}\n--- STDOUT ---\n{r.stdout}\n--- STDERR ---\n{r.stderr}")
+  return r.stdout
+
+print('[1/3] lake update (fetch mathlib)…')
+run(['lake','update'], cwd=PROJ)
+
+print('[2/3] lake build (compile)…')
+run(['lake','build'], cwd=PROJ)
+
+print('[3/3] lake exe qeddump (dump)…')
+out = run(['lake','exe','qeddump'], cwd=PROJ)
+
+OUT.write_text(json.dumps(json.loads(out), ensure_ascii=False, indent=2), encoding='utf-8')
+print(f'[ok] wrote statements → {OUT}')
