@@ -1,11 +1,11 @@
 
 #import os, re, json, sys, pathlib, hashlib
+import re, json
+from pathlib import Path
 
-import pathlib, re
-
-ROOT = pathlib.Path(__file__).resolve().parents[1]
-MATHLIB = ROOT / 'repos' / 'mathlib4' / 'Mathlib'
-OUT = ROOT / 'data' / 'statements.json'
+ROOT = Path(__file__).resolve().parents[1]
+MATHLIB = Path(ROOT, 'data', 'raw', 'mathlib4', 'Mathlib')
+OUT = Path(ROOT, 'data', 'processed', 'statements.json')
 
 decl_pat = re.compile(
     r'^(theorem|lemma)\s+([A-Za-z0-9_\'\.]+)\s*:(.*?)(?:(?==\s*by)|(?::=)|(?:\n\s*:=)|(?:\n\s*where)|$)',
@@ -14,27 +14,18 @@ decl_pat = re.compile(
 import_pat = re.compile(r'^\s*import\s+([A-Za-z0-9\.\s]+)', re.MULTILINE)
 
 
-def main():
-    print('t')
-
-
-if __name__ == '__main__':
-    main()
-
-
-
-
-"""
 def clean_stmt(s: str) -> str:
-    # collapse whitespace; keep unicode symbols
+    # collapse whitespace, keep unicode symbols
     return re.sub(r'\s+', ' ', s).strip()
 
-def module_from_path(p: pathlib.Path) -> str:
+
+def module_from_path(p: Path) -> str:
     # Mathlib/Algebra/Group.lean -> Mathlib.Algebra.Group
     parts = list(p.relative_to(MATHLIB).with_suffix('').parts)
     return 'Mathlib.' + '.'.join(parts)
 
-def harvest_file(fp: pathlib.Path):
+
+def harvest_file(fp: Path):
     text = fp.read_text(encoding='utf-8', errors='ignore')
     # optional quick skip: files that are entirely tactics/automation are fine to include or skip.
     imports = []
@@ -66,8 +57,10 @@ def harvest_file(fp: pathlib.Path):
         })
     return items
 
+
 def main():
     all_items = []
+
     for fp in MATHLIB.rglob('*.lean'):
         # skip archived or generated if desired
         if '/.lake/' in str(fp): 
@@ -77,6 +70,7 @@ def main():
             continue
         items = harvest_file(fp)
         all_items.extend(items)
+
     # deterministic order
     all_items.sort(key=lambda d: d['id'])
     data = {'ver': 1, 'statements': all_items}
@@ -84,6 +78,6 @@ def main():
     OUT.write_text(json.dumps(data, ensure_ascii=False, indent=2), encoding='utf-8')
     print(f'wrote {len(all_items)} statements -> {OUT}')
 
+
 if __name__ == '__main__':
-    sys.exit(main())
-"""
+    main()
