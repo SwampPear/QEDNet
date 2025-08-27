@@ -1,0 +1,149 @@
+{
+  "statements": [
+    {
+      "id": "lean:Mathlib.Algebra.Group.pow_mul",
+      "sys": "lean",
+      "mod": "Mathlib.Algebra.Group",
+      "name": "pow_mul",
+      "kind": "thm",
+      "stmt": "∀ (G : Group) (a b : G) (n : ℕ), (a * b)^n = a^n * b^n"
+    }
+  ],
+  "traces": [
+    {
+      "theorem_id": "lean:Mathlib.Algebra.Group.pow_mul",
+      "steps": [
+        {
+          "i": 0,
+          "goal": "⊢ (a * b)^n = a^n * b^n",
+          "ctx": [
+            "a b : G",
+            "n : ℕ"
+          ],
+          "action": "induction n",
+          "ok": true
+        },
+        {
+          "i": 1,
+          "goal": "⊢ (a * b)^0 = a^0 * b^0",
+          "ctx": [
+            "a b : G"
+          ],
+          "action": "simp",
+          "ok": true
+        },
+        {
+          "i": 2,
+          "goal": "⊢ (a * b)^(n+1) = a^(n+1) * b^(n+1)",
+          "ctx": [
+            "a b : G",
+            "n : ℕ",
+            "ih : (a * b)^n = a^n * b^n"
+          ],
+          "action": "rw [pow_succ, ih]",
+          "ok": true
+        }
+      ]
+    }
+  ],
+  "dag": [
+    {
+      "theorem_id": "lean:Mathlib.Algebra.Group.pow_mul",
+      "nodes": [
+        {
+          "id": "g0",
+          "type": "goal"
+        },
+        {
+          "id": "l_mul_comm",
+          "type": "lemma",
+          "ref": "lean:Mathlib.Algebra.Group.mul_comm"
+        },
+        {
+          "id": "l_pow_succ",
+          "type": "lemma",
+          "ref": "lean:Mathlib.Algebra.Group.pow_succ"
+        }
+      ],
+      "edges": [
+        {
+          "src": "l_mul_comm",
+          "dst": "g0",
+          "etype": "justifies"
+        },
+        {
+          "src": "l_pow_succ",
+          "dst": "g0",
+          "etype": "rewrites"
+        }
+      ]
+    }
+  ],
+  "replay": [
+    {
+      "trajectory_id": "t:0001",
+      "theorem_id": "lean:Mathlib.Algebra.Group.pow_mul",
+      "steps": [
+        {
+          "i": 0,
+          "state": "hash:xyz",
+          "action": "induction n",
+          "logp": -0.42,
+          "value": 0.31,
+          "reward": 0.0
+        },
+        {
+          "i": 1,
+          "state": "hash:uvw",
+          "action": "simp",
+          "logp": -0.20,
+          "value": 0.65,
+          "reward": 1.0
+        }
+      ],
+      "outcome": "success"
+    }
+  ],
+  "retrieval": [
+    {
+      "query_id": "rq:0001",
+      "theorem_id": "lean:Mathlib.Algebra.Group.pow_mul",
+      "query_text": "⊢ (a * b)^n = a^n * b^n",
+      "positives": [
+        "lean:Mathlib.Algebra.Group.pow_succ",
+        "lean:Mathlib.Algebra.Group.mul_comm"
+      ],
+      "hard_negs": [
+        "lean:Mathlib.Algebra.Group.pow_mul_commute",
+        "lean:Mathlib.Data.Nat.succ_mul"
+      ],
+      "negs": [
+        "lean:Mathlib.Topology.Basic.compact_space",
+        "lean:Mathlib.Analysis.Calculus.deriv_add"
+      ]
+    }
+  ],
+  "verifier": [
+    {
+      "theorem_id": "lean:Mathlib.Algebra.Group.pow_mul",
+      "goal": "⊢ (a * b)^(n+1) = a^(n+1) * b^(n+1)",
+      "candidates": [
+        {
+          "action": "rw [pow_succ, ih]",
+          "label": 1,
+          "score": 0.95
+        },
+        {
+          "action": "apply mul_comm",
+          "label": 0,
+          "score": 0.12
+        },
+        {
+          "action": "simp",
+          "label": 0,
+          "score": 0.05
+        }
+      ]
+    }
+  ]
+}
