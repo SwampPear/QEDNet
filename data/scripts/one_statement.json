@@ -1,0 +1,2 @@
+DumpOneStatement.lean:9:8: warning: `Array.get!` has been deprecated: Use indexing notation `as[i]!` instead
+{"ver":1,"statements":[{"uses":[],"sys":"lean","stmt":"∀ {n : Nat}, Ne n 0 → Function.Injective fun a => instHPow.hPow a n","name":"pow_left_injective","mod":"Mathlib.Data.Nat.Basic","kind":"thm","id":"lean:Mathlib.Data.Nat.Basic.pow_left_injective"}]}

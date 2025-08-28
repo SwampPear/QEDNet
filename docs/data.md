@@ -16,3 +16,15 @@ lake build
 
 # Statement Parsing
 # Proof Trace Parsing
+
+# 1) fetch deps (mathlib) and sync toolchain
+lake update
+# if you get a toolchain mismatch warning, do:
+# cp .lake/packages/mathlib/lean-toolchain ./lean-toolchain
+# elan toolchain install "$(cat lean-toolchain)"
+
+# 2) build just enough mathlib for Mathlib.Data.Nat.Basic and your file
+lake build
+
+# 3) run the debug dumper (first 10 statements) to a sample file
+lake exe qeddump > ~/qednet/data/sample_statements.json
