@@ -1,21 +1,16 @@
 # QEDNet
-
-QEDNet is an AI model designed to **train, learn, and generate verifiable mathematical proofs**. It integrates 
-large-scale language models with formal verification systems, reinforcement learning, and symbolic reasoning.
+QEDNet is a machine learning model designed to learn and generate verifiable mathematical proofs. It integrates 
+large-scale language models with formal verification systems, reinforcement learning, and symbolic reasoning. The
+ultimate goal of QEDNet is to serve as a scalable, general-purpose mathematical reasoning engine, capable of advancing
+formal theorem proving, education, and research automation.
 
 ## Key Features
-
-- Modular verifier-in-the-loop architecture  
+- Modular verifier-in-the-loop architecture
 - Neural + symbolic hybrid reasoning  
 - Proof DAG with GNN structural encoding  
 - External solver integration (CAS, SMT, LP solvers)  
 - Replay-buffer reinforcement learning  
 - Neural verifier/critic for efficient candidate selection  
-
-## Vision
-
-The ultimate goal of QEDNet is to serve as a **scalable, general-purpose mathematical reasoning engine**, capable of 
-advancing formal theorem proving, education, and research automation.
 
 ## Overview
 QEDNet is a modular, verifier-in-the-loop system with the following core components:
