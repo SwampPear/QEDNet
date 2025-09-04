@@ -5,12 +5,12 @@ Usage:
   uv run python data/scripts/export_mathlib4_statements_traces.py [options]
 
 Description:
-  - Ensures a LeanDojo traced repo exists (traces if missing, reuses if present).
+  - Ensures a LeanDojo traced repo exists (traces if missing, reuses if present)
   - Builds a unified "statements" list from:
-      • Traced theorems/lemmas (via TracedRepo API)
-      • Any declaration rows found in LeanDojo artifact JSON/JSONL files (defs, axioms, inductives, …)
-  - Builds a "traces" list (tactic steps) for declarations that actually have traced proofs.
-  - Writes a single JSON to data/exports/mathlib4/mathlib4_statements_traces.json.
+    - Traced theorems/lemmas (via TracedRepo API)
+    - Any declaration rows found in LeanDojo artifact JSON/JSONL files (defs, axioms, inductives, ...)
+  - Builds a "traces" list (tactic steps) for declarations that actually have traced proofs
+  - Writes a single JSON to data/exports/mathlib4/mathlib4_statements_traces.json
 
 Options:
   --repo URL       Git URL (default: https://github.com/leanprover-community/mathlib4)
@@ -22,12 +22,12 @@ Options:
   --force          Delete --dst if it exists and retrace (DANGEROUS)
 
 Requirements:
-  • elan/lean on PATH
-  • env var GITHUB_ACCESS_TOKEN set
+  - elan/lean on PATH
+  - env var GITHUB_ACCESS_TOKEN set
 """
 
 from __future__ import annotations
-import argparse, json, os, sys, shutil
+import argparse, json, os, sys
 from pathlib import Path
 from itertools import islice
 from typing import Iterable
@@ -36,12 +36,15 @@ from lean_dojo.data_extraction.lean import LeanGitRepo, get_latest_commit
 from lean_dojo.data_extraction.trace import trace
 from lean_dojo.data_extraction.traced_data import TracedRepo
 
-DEFAULT_REPO = "https://github.com/leanprover-community/mathlib4"
 
-# ------------------------- helpers -------------------------
+REPO = os.getenv("REPO")
+GITHUB_ACCESS_TOKEN = os.getenv("GITHUB_ACCESS_TOKEN")
+COMMIT = os.getenv("COMMIT")
+
 
 def limited(iterable: Iterable, limit: int | None):
   return islice(iterable, limit) if limit is not None else iterable
+
 
 def detect_traced_root(dst: Path) -> Path:
   """LeanDojo may create a single subdir under dst; try to resolve that."""
@@ -53,11 +56,13 @@ def detect_traced_root(dst: Path) -> Path:
   guess = dst / "mathlib4"
   return guess if guess.exists() else dst
 
+
 def infer_mod_and_name(full: str) -> tuple[str, str]:
   parts = full.split(".")
   mod = ".".join(parts[:-1]) if len(parts) > 1 else ""
   name = parts[-1] if parts else full
   return mod, name
+
 
 def load_jsonl(p: Path):
   out = []
@@ -71,6 +76,7 @@ def load_jsonl(p: Path):
       except Exception:
         out.append({"_raw": line})
   return out
+
 
 def sweep_artifacts(traced_root: Path):
   """
@@ -116,9 +122,9 @@ def sweep_artifacts(traced_root: Path):
 
   return rows
 
+
 def build_statement_record(full_name: str, typ: str | None, kind: str | None):
   mod, nm = infer_mod_and_name(full_name)
-  # For consistency, we store the type/signature in "stmt" even for defs/axioms.
   return {
     "id": f"lean:{full_name}",
     "sys": "lean",
@@ -128,43 +134,32 @@ def build_statement_record(full_name: str, typ: str | None, kind: str | None):
     "stmt": typ,  # theorems: proposition; defs: type; axioms: proposition
   }
 
-# ------------------------- main -------------------------
 
 def main():
   ap = argparse.ArgumentParser(description="Export mathlib4 statements (all decl kinds) + traces.")
-  ap.add_argument("--repo", default=DEFAULT_REPO)
-  ap.add_argument("--commit", default=None)
   ap.add_argument("--dst", default="data/traces/mathlib4")
   ap.add_argument("--out", default="data/exports/mathlib4/mathlib4_statements_traces.json")
   ap.add_argument("--test", action="store_true", help="Cap outputs to 10 items")
   ap.add_argument("--limit", type=int, default=None, help="Cap outputs to N items (overrides --test)")
-  ap.add_argument("--force", action="store_true", help="Delete --dst if it exists and retrace (DANGEROUS)")
   args = ap.parse_args()
 
   if not os.getenv("GITHUB_ACCESS_TOKEN"):
     print("ERROR: GITHUB_ACCESS_TOKEN must be set.", file=sys.stderr)
     sys.exit(2)
 
-  # Prepare paths
+  # prepare paths
   dst = Path(args.dst)
   dst.parent.mkdir(parents=True, exist_ok=True)
 
   out = Path(args.out)
   out.parent.mkdir(parents=True, exist_ok=True)
 
-  # Resolve commit
-  commit = args.commit or get_latest_commit(args.repo)
-  repo = LeanGitRepo(args.repo, commit)
+  # resolve commit and build lean repo
+  repo = LeanGitRepo(REPO, COMMIT)
 
   # Ensure traced repo exists (don't pre-create dst; LeanDojo requires non-existing dir)
-  if dst.exists():
-    if args.force:
-      print(f"[force] removing existing trace dir: {dst}")
-      shutil.rmtree(dst)
-    else:
-      print(f"[reuse] traced repo exists at {dst}")
   if not dst.exists():
-    print(f"[trace] repo={args.repo} commit={commit} -> {dst}")
+    print(f"[trace] repo={REPO} commit={COMMIT} -> {dst}")
     trace(repo, dst_dir=str(dst))
 
   traced_root = detect_traced_root(dst).resolve()
@@ -251,8 +246,8 @@ def main():
     "statements": statements,
     "traces": traces,
     "meta": {
-      "repo": args.repo,
-      "repo_commit": commit,
+      "repo": REPO,
+      "repo_commit": COMMIT,
       "traced_root": str(traced_root),
       "counts": {
         "statements": len(statements),

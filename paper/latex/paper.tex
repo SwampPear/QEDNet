@@ -1,0 +1,59 @@
+\documentclass[11pt]{article}
+
+% --- Packages ---
+\usepackage[utf8]{inputenc}
+\usepackage{amsmath, amssymb, amsthm}
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{hyperref}
+\usepackage{url}
+\usepackage{algorithm}
+\usepackage{algorithmic}
+\usepackage{geometry}
+\usepackage{natbib}
+\usepackage{times}
+
+% --- Page setup ---
+\geometry{margin=1in}
+
+% --- Title info ---
+\title{Towards Generalizable AI Reasoning: \\ A Proof-Based Perspective}
+\author{
+  Michael Vaden \\
+  Georgia Institute of Technology \\
+  \texttt{michaelvaden@gatech.edu}
+}
+\date{\today}
+
+% --- Theorems ---
+\newtheorem{definition}{Definition}
+\newtheorem{theorem}{Theorem}
+\newtheorem{lemma}{Lemma}
+
+\begin{document}
+
+\maketitle
+
+\begin{abstract}
+We propose a framework for integrating neural and symbolic reasoning in AI systems. Our approach builds on proof search, verification, and reinforcement learning to enable scalable theorem proving and reasoning automation. This paper outlines the architecture, preliminary experiments, and implications for AI research.
+\end{abstract}
+
+\section{Introduction}
+Artificial Intelligence research has made significant progress in natural language understanding, perception, and planning. However, generalizable reasoning, particularly in mathematics, remains challenging. In this work, we explore \ldots
+
+\section{Related Work}
+Prior work on neural theorem provers \ldots
+
+\section{Method}
+We present a modular architecture with a planner, proof policy, and verifier-in-the-loop \ldots
+
+\section{Experiments}
+Our evaluation benchmarks the model on formal libraries (e.g., Lean’s \texttt{mathlib4}) \ldots
+
+\section{Conclusion}
+We outline challenges and future directions for scaling symbolic-neural hybrid systems.
+
+\bibliographystyle{plainnat}
+\bibliography{references}
+
+\end{document}
