@@ -4,4 +4,7 @@ version = "0.1.0"
 description = "QEDNet is a machine learning model designed to learn and generate verifiable mathematical proofs."
 readme = "README.md"
 requires-python = ">=3.12"
-dependencies = ["lean-dojo>=4.20.0"]
+dependencies = [
+    "lean-dojo>=4.20.0",
+    "pytest>=8.4.1",
+]

@@ -2,3 +2,5 @@
 .lake
 ref/
 .env
+__pycache__/
+.pytest_cache/

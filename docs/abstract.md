@@ -10,12 +10,15 @@ formal theorem proving, education, and research automation.
 - proof DAG with GNN structural encoding 
 - replay-buffer reinforcement learning  
 - neural verifier/critic for efficient candidate selection
+- store (goal, action, outcome, proof-sketch) and sample by “learning progress” so you don’t overfit the easy wins
 
 # Overview
 QEDNet is a modular, verifier-in-the-loop system with the following core components:
 
 ## Hierarchical Planner
 - large MoE Transformer used to decompose problems into a proof sketch of goals, lemmas, and cases
+- a clean encoder that turns Lean goals/ctx into tokens the MoE really understands (pretty-print + symbols + small graph 
+of hypotheses)
 
 ## Neural Proof Policy + Value Head
 - proposes next tactic/lemma and operates on formal proof states
@@ -37,18 +40,7 @@ QEDNet is a modular, verifier-in-the-loop system with the following core compone
 ## Output
 - structured as tactics or lemmas
 
-# Optional Features
-## State Bridge
-- a clean encoder that turns Lean goals/ctx into tokens the MoE really understands (pretty-print + symbols + small graph 
-of hypotheses)
-
-## Lemma synthesis
-- let the planner mint tiny sub-lemmas and try to prove them; successful ones go to a local scratchpad index for reuse 
-within the run
-
-## Replay with priorities
-- store (goal, action, outcome, proof-sketch) and sample by “learning progress” so you don’t overfit the easy wins
-
+# More Features
 ## Curriculum Switches
 - start with medium proofs, then inject perturbed goals and solver hints; periodically mine “hard negatives” that fooled 
 the verifier
