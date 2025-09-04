@@ -15,10 +15,10 @@ formal theorem proving, education, and research automation.
 ## Overview
 QEDNet is a modular, verifier-in-the-loop system with the following core components:
 
-**1. Hierarchical Planner**  
+### Hierarchical Planner
   - Uses a large MoE Transformer to decompose problems into a proof sketch (goals, lemmas, cases).  
 
-**2. Neural Proof Policy + Value Head**  
+### Neural Proof Policy + Value Head**  
   - Operates on formal proof states (Lean/Coq context, local goals, hypotheses).  
   - Proposes the next tactic/lemma.  
   - Estimates distance-to-proof.  
